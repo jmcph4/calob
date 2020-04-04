@@ -70,3 +70,28 @@ impl Account {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new_normal() {
+        let account_id: AccountId = 12;
+        let account_name: String = "John Doe".to_string();
+        let account_balance: AccountBalance = 33000;
+        let account_holdings: HashMap<String, u64> = HashMap::new();
+        
+        let expected_account: Account = Account {
+            id: account_id,
+            name: account_name.clone(),
+            balance: account_balance,
+            holdings: account_holdings.clone()
+        };
+        
+        let actual_account: Account = Account::new(account_id, account_name,
+                                        account_balance, account_holdings);
+        
+        assert_eq!(actual_account, expected_account);
+    }
+}
+
