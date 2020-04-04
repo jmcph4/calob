@@ -1,0 +1,18 @@
+[package]
+name = "calob"
+version = "0.2.0"
+authors = ["jmcph4 <jmcph4.github@gmail.com>"]
+edition = "2018"
+
+description = "Configurable Automated Limit Order Book"
+repository = "https://github.com/jmcph4/calob"
+license = "MIT"
+keywords = ["calob", "limit-order-book", "market-maker", "order-book"]
+categories = ["algorithms", "data-structures", "simulation", ]
+readme = "README.md"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+thiserror = "1.0.14"
+
