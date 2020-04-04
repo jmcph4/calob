@@ -40,5 +40,33 @@ impl Account {
             holdings
         }
     }    
+
+    pub fn get_id(&self) -> AccountId {
+        self.id
+    }
+
+    pub fn get_name(&self) -> String {
+        self.name.clone()
+    }
+
+    pub fn get_balance(&self) -> AccountBalance {
+        self.balance
+    }
+
+    pub fn set_balance(&mut self, balance: AccountBalance) {
+        self.balance = balance;
+    }
+
+    pub fn get_holding(&self, ticker: String) -> Option<u64> {
+        if !self.holdings.contains_key(&ticker) {
+            return None;
+        }
+
+        Some(self.holdings[&ticker])
+    }
+
+    pub fn set_holdings(&mut self, ticker: String, quantity: u64) {
+        self.holdings.insert(ticker, quantity);
+    }
 }
 
