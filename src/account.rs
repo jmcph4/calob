@@ -11,3 +11,15 @@ pub struct Account {
     holdings: HashMap<String, u64>
 }
 
+impl Account {
+    pub fn new(id: AccountId, name: String, balance: AccountBalance,
+        holdings: HashMap<String, u64>) -> Self {
+        Account {
+            id,
+            name,
+            balance,
+            holdings
+        }
+    }
+}
+
