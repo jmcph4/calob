@@ -1,4 +1,23 @@
 use std::collections::HashMap;
+use std::fmt;
+
+use thiserror::Error;
+
+#[derive(Copy, Clone, Debug, Error)]
+pub enum AccountError {
+    InsufficientFunds,
+    InsufficientHoldings
+}
+
+impl fmt::Display for AccountError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            AccountError::InsufficientFunds => write!(f, "Insufficient Funds"),
+            AccountError::InsufficientHoldings =>
+                write!(f, "Insufficient Holdings")
+        }
+    }
+}
 
 pub type AccountId = u128;
 pub type AccountBalance = u128;
@@ -20,6 +39,6 @@ impl Account {
             balance,
             holdings
         }
-    }
+    }    
 }
 
