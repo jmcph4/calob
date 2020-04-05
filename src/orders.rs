@@ -30,6 +30,19 @@ pub struct Order<'a> {
     quantity: OrderQuantity
 }
 
+impl<'a> Order<'a> {
+    pub fn new(id: OrderId, owner: &'a mut Account, order_type: OrderType,
+        price: OrderPrice, quantity: OrderQuantity) -> Self {
+        Order {
+            id,
+            owner,
+            order_type,
+            price,
+            quantity
+        }
+    }
+}
+
 impl fmt::Display for Order<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}: {} {} @ {} for {}", self.id, self.owner.get_name(),
