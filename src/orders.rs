@@ -31,15 +31,35 @@ pub struct Order<'a> {
 }
 
 impl<'a> Order<'a> {
-    pub fn new(id: OrderId, owner: &'a mut Account, order_type: OrderType,
+    pub fn new(id: OrderId, owner: &'a mut Account, r#type: OrderType,
         price: OrderPrice, quantity: OrderQuantity) -> Self {
         Order {
             id,
             owner,
-            order_type,
+            order_type: r#type,
             price,
             quantity
         }
+    }
+
+    pub fn id(&self) -> OrderId {
+        self.id
+    }
+
+    pub fn owner<'b>(&'b mut self) -> &'b mut Account {
+        self.owner
+    }
+
+    pub fn r#type(&self) -> OrderType {
+        self.order_type
+    }
+
+    pub fn price(&self) -> OrderPrice {
+        self.price
+    }
+
+    pub fn quantity(&self) -> OrderQuantity {
+        self.quantity
     }
 }
 
