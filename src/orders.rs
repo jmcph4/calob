@@ -1,3 +1,5 @@
+use std::fmt;
+
 use crate::account::Account;
 
 pub type OrderId = u128;
@@ -10,6 +12,15 @@ pub enum OrderType {
     Ask
 }
 
+impl fmt::Display for OrderType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            OrderType::Bid => write!(f, "BID"),
+            OrderType::Ask => write!(f, "ASK")
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Eq)]
 pub struct Order<'a> {
     id: OrderId,
@@ -17,5 +28,12 @@ pub struct Order<'a> {
     order_type: OrderType,
     price: OrderPrice,
     quantity: OrderQuantity
+}
+
+impl fmt::Display for Order<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}: {} {} @ {} for {}", self.id, self.owner.get_name(),
+                self.order_type, self.price, self.quantity)
+    }
 }
 
