@@ -12,12 +12,13 @@ pub type BookId = u128;
 
 #[derive(Debug, PartialEq, Eq, Default)]
 pub struct Book<'a> {
-    pub id: BookId,
-    pub name: String,
-    pub ticker: String,
-    pub bids: Side<'a>,
-    pub asks: Side<'a>,
-    pub ltp: OrderPrice
+    id: BookId,
+    name: String,
+    ticker: String,
+    bids: Side<'a>,
+    asks: Side<'a>,
+    ltp: OrderPrice,
+    has_traded: bool
 }
 
 impl<'a> Book<'a> {
@@ -28,7 +29,28 @@ impl<'a> Book<'a> {
             ticker,
             bids: Side::new(),
             asks: Side::new(),
-            ltp: 0
+            ltp: 0,
+            has_traded: false
+        }
+    }
+
+    pub fn id(&self) -> BookId {
+        self.id
+    }
+
+    pub fn name(&self) -> String {
+        self.name.clone()
+    }
+
+    pub fn ticker(&self) -> String {
+        self.ticker.clone()
+    }
+
+    pub fn ltp(&self) -> Option<OrderPrice> {
+        if self.has_traded {
+            Some(self.ltp)
+        } else {
+            None
         }
     }
 }
