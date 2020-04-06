@@ -70,3 +70,37 @@ impl fmt::Display for Order<'_> {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use std::collections::HashMap;
+
+    #[test]
+    fn test_new_normal() {
+        let mut actual_acct: Account = Account::new(32, "John Doe".to_string(),
+                                                      100000, HashMap::new());
+
+        let mut expected_acct: Account = Account::new(32, "John Doe".to_string(),
+                                                        100000, HashMap::new());
+        
+        let order_id: OrderId = 12;
+        let order_owner: &mut Account = &mut actual_acct;
+        let order_type: OrderType = OrderType::Bid;
+        let order_price: OrderPrice = 330;
+        let order_quantity: OrderQuantity = 50;
+
+        let actual_order: Order = Order::new(order_id, order_owner, order_type,
+                                                order_price, order_quantity);
+        let expected_order: Order = Order {
+            id: order_id,
+            owner: &mut expected_acct,
+            order_type,
+            price: order_price,
+            quantity: order_quantity
+        };
+
+        assert_eq!(actual_order, expected_order);
+    }
+}
+
