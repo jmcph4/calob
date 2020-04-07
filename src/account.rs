@@ -6,7 +6,9 @@ use thiserror::Error;
 #[derive(Copy, Clone, Debug, Error)]
 pub enum AccountError {
     InsufficientFunds,
-    InsufficientHoldings
+    InsufficientHoldings,
+    BalanceOutOfBounds,
+    HoldingOutOfBounds
 }
 
 impl fmt::Display for AccountError {
@@ -14,7 +16,11 @@ impl fmt::Display for AccountError {
         match self {
             AccountError::InsufficientFunds => write!(f, "Insufficient Funds"),
             AccountError::InsufficientHoldings =>
-                write!(f, "Insufficient Holdings")
+                write!(f, "Insufficient Holdings"),
+            AccountError::BalanceOutOfBounds =>
+                write!(f, "Balance (or difference in) too large or too small"),
+            AccountError::HoldingOutOfBounds =>
+                write!(f, "Holding (or difference in) too large or too small")
         }
     }
 }
@@ -67,6 +73,28 @@ impl Account {
 
     pub fn set_holding(&mut self, ticker: String, quantity: u64) {
         self.holdings.insert(ticker, quantity);
+    }
+
+    pub fn add_balance(&mut self, amount: AccountBalance) ->
+        Result<(), AccountError> {
+        /* bounds check */
+        if self.balance.checked_add(amount) != None {
+            return Err(AccountError::BalanceOutOfBounds);
+        }
+        
+        self.balance += amount;
+        Ok(())
+    }
+
+    pub fn take_balance(&mut self, amount: AccountBalance) ->
+        Result<(), AccountError> {
+        /* bounds check */
+        if amount > self.balance {
+            return Err(AccountError::BalanceOutOfBounds);
+        }
+
+        self.balance -= amount;
+        Ok(())
     }
 }
 
