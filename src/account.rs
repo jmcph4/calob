@@ -82,7 +82,7 @@ impl Account {
     pub fn add_balance(&mut self, amount: AccountBalance) ->
         Result<(), AccountError> {
         /* bounds check */
-        if self.balance.checked_add(amount) != None {
+        if self.balance.checked_add(amount).is_none() {
             return Err(AccountError::BalanceOutOfBounds);
         }
         
@@ -108,7 +108,8 @@ impl Account {
             return Err(AccountError::AssetNotFound);
         }
 
-        if self.holdings.get_mut(&ticker).unwrap().checked_add(amount) != None {
+        if self.holdings.get_mut(&ticker).unwrap().checked_add(amount).
+            is_none() {
             return Err(AccountError::HoldingOutOfBounds);
         }
 
