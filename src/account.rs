@@ -8,7 +8,8 @@ pub enum AccountError {
     InsufficientFunds,
     InsufficientHoldings,
     BalanceOutOfBounds,
-    HoldingOutOfBounds
+    HoldingOutOfBounds,
+    AssetNotFound
 }
 
 impl fmt::Display for AccountError {
@@ -20,25 +21,28 @@ impl fmt::Display for AccountError {
             AccountError::BalanceOutOfBounds =>
                 write!(f, "Balance (or difference in) too large or too small"),
             AccountError::HoldingOutOfBounds =>
-                write!(f, "Holding (or difference in) too large or too small")
+                write!(f, "Holding (or difference in) too large or too small"),
+            AccountError::AssetNotFound =>
+                write!(f, "No such asset in portfolio")
         }
     }
 }
 
 pub type AccountId = u128;
 pub type AccountBalance = u128;
+pub type AccountHolding = u128;
 
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
 pub struct Account {
     id: AccountId,
     name: String,
     balance: AccountBalance,
-    holdings: HashMap<String, u64>
+    holdings: HashMap<String, AccountHolding>
 }
 
 impl Account {
     pub fn new(id: AccountId, name: String, balance: AccountBalance,
-        holdings: HashMap<String, u64>) -> Self {
+        holdings: HashMap<String, AccountHolding>) -> Self {
         Account {
             id,
             name,
@@ -63,7 +67,7 @@ impl Account {
         self.balance = balance;
     }
 
-    pub fn holding(&self, ticker: String) -> Option<u64> {
+    pub fn holding(&self, ticker: String) -> Option<AccountHolding> {
         if !self.holdings.contains_key(&ticker) {
             return None;
         }
@@ -71,7 +75,7 @@ impl Account {
         Some(self.holdings[&ticker])
     }
 
-    pub fn set_holding(&mut self, ticker: String, quantity: u64) {
+    pub fn set_holding(&mut self, ticker: String, quantity: AccountHolding) {
         self.holdings.insert(ticker, quantity);
     }
 
@@ -96,6 +100,36 @@ impl Account {
         self.balance -= amount;
         Ok(())
     }
+
+    pub fn add_holding(&mut self, ticker: String, amount: AccountHolding) ->
+        Result<(), AccountError> {
+        /* bounds check */
+        if !self.holdings.contains_key(&ticker) {
+            return Err(AccountError::AssetNotFound);
+        }
+
+        if self.holdings.get_mut(&ticker).unwrap().checked_add(amount) != None {
+            return Err(AccountError::HoldingOutOfBounds);
+        }
+
+        *self.holdings.get_mut(&ticker).unwrap() += amount;
+        Ok(())
+    }
+
+    pub fn take_holding(&mut self, ticker: String, amount: AccountHolding) ->
+        Result<(), AccountError> {
+        /* bounds check */
+        if !self.holdings.contains_key(&ticker) {
+            return Err(AccountError::AssetNotFound);
+        }
+
+        if amount > self.holdings[&ticker] {
+            return Err(AccountError::HoldingOutOfBounds);
+        }
+
+        *self.holdings.get_mut(&ticker).unwrap() -= amount;
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -107,7 +141,7 @@ mod tests {
         let account_id: AccountId = 12;
         let account_name: String = "John Doe".to_string();
         let account_balance: AccountBalance = 33000;
-        let account_holdings: HashMap<String, u64> = HashMap::new();
+        let account_holdings: HashMap<String, AccountHolding> = HashMap::new();
         
         let expected_account: Account = Account {
             id: account_id,
