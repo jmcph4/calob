@@ -65,7 +65,7 @@ impl Account {
         Some(self.holdings[&ticker])
     }
 
-    pub fn set_holdings(&mut self, ticker: String, quantity: u64) {
+    pub fn set_holding(&mut self, ticker: String, quantity: u64) {
         self.holdings.insert(ticker, quantity);
     }
 }
