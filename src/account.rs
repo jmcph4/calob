@@ -41,15 +41,15 @@ impl Account {
         }
     }    
 
-    pub fn get_id(&self) -> AccountId {
+    pub fn id(&self) -> AccountId {
         self.id
     }
 
-    pub fn get_name(&self) -> String {
+    pub fn name(&self) -> String {
         self.name.clone()
     }
 
-    pub fn get_balance(&self) -> AccountBalance {
+    pub fn balance(&self) -> AccountBalance {
         self.balance
     }
 
@@ -57,7 +57,7 @@ impl Account {
         self.balance = balance;
     }
 
-    pub fn get_holding(&self, ticker: String) -> Option<u64> {
+    pub fn holding(&self, ticker: String) -> Option<u64> {
         if !self.holdings.contains_key(&ticker) {
             return None;
         }
@@ -65,7 +65,7 @@ impl Account {
         Some(self.holdings[&ticker])
     }
 
-    pub fn set_holdings(&mut self, ticker: String, quantity: u64) {
+    pub fn set_holding(&mut self, ticker: String, quantity: u64) {
         self.holdings.insert(ticker, quantity);
     }
 }
