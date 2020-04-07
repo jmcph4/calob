@@ -65,7 +65,7 @@ impl<'a> Order<'a> {
 
 impl fmt::Display for Order<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}: {} {} @ {} for {}", self.id, self.owner.get_name(),
+        write!(f, "{}: {} {} @ {} for {}", self.id, self.owner.name(),
                 self.order_type, self.price, self.quantity)
     }
 }
