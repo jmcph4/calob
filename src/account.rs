@@ -76,7 +76,11 @@ impl Account {
     }
 
     pub fn set_holding(&mut self, ticker: String, quantity: AccountHolding) {
-        self.holdings.insert(ticker, quantity);
+        if !self.holdings.contains_key(&ticker) {
+            self.holdings.insert(ticker, quantity);
+        } else {
+            *self.holdings.get_mut(&ticker).unwrap() = quantity;
+        }
     }
 
     pub fn add_balance(&mut self, amount: AccountBalance) ->
@@ -103,17 +107,18 @@ impl Account {
 
     pub fn add_holding(&mut self, ticker: String, amount: AccountHolding) ->
         Result<(), AccountError> {
-        /* bounds check */
         if !self.holdings.contains_key(&ticker) {
-            return Err(AccountError::AssetNotFound);
+            self.holdings.insert(ticker, amount);
+        } else {
+            /* bounds check */
+            if self.holdings.get_mut(&ticker).unwrap().checked_add(amount).
+                is_none() {
+                return Err(AccountError::HoldingOutOfBounds);
+            }
+
+            *self.holdings.get_mut(&ticker).unwrap() += amount;
         }
 
-        if self.holdings.get_mut(&ticker).unwrap().checked_add(amount).
-            is_none() {
-            return Err(AccountError::HoldingOutOfBounds);
-        }
-
-        *self.holdings.get_mut(&ticker).unwrap() += amount;
         Ok(())
     }
 

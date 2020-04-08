@@ -1,6 +1,6 @@
 [package]
 name = "calob"
-version = "0.3.1"
+version = "0.3.2"
 authors = ["jmcph4 <jmcph4.github@gmail.com>"]
 edition = "2018"
 
