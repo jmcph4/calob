@@ -2,7 +2,9 @@ use std::collections::{BTreeMap, VecDeque};
 
 use crate::order::*;
 
-pub enum BookError {}
+pub enum BookError {
+    OrderNotFound
+}
 
 type PriceLabel = OrderPrice;
 type OrderQueue<'a> = VecDeque<&'a mut Order<'a>>;
@@ -18,7 +20,8 @@ pub struct Book<'a> {
     bids: Side<'a>,
     asks: Side<'a>,
     ltp: OrderPrice,
-    has_traded: bool
+    has_traded: bool,
+    order_ids: Vec<OrderId>
 }
 
 impl<'a> Book<'a> {
@@ -30,7 +33,8 @@ impl<'a> Book<'a> {
             bids: Side::new(),
             asks: Side::new(),
             ltp: 0,
-            has_traded: false
+            has_traded: false,
+            order_ids: vec![]
         }
     }
 
@@ -56,6 +60,7 @@ impl<'a> Book<'a> {
 
     pub fn submit(&mut self, order: &'a mut Order<'a>) ->
         Result<(), BookError> {
+        let order_id: OrderId = order.id();
         let price_key: OrderPrice = order.price();
         let order_quantity: OrderQuantity = order.quantity();
 
@@ -136,6 +141,7 @@ impl<'a> Book<'a> {
                 if !matched {
                     self.bids.insert(price_key, VecDeque::new());
                     self.bids.get_mut(&price_key).unwrap().push_back(order);
+                    self.order_ids.push(order_id);
                 } else {
                     self.has_traded = true;
                     self.ltp = price_key;
@@ -217,6 +223,7 @@ impl<'a> Book<'a> {
                 if !matched {
                     self.asks.insert(price_key, VecDeque::new());
                     self.asks.get_mut(&price_key).unwrap().push_back(order);
+                    self.order_ids.push(order_id);
                 } else {
                     self.has_traded = true;
                     self.ltp = price_key;
@@ -224,6 +231,29 @@ impl<'a> Book<'a> {
             }
         };
 
+        Ok(())
+    }
+
+    pub fn cancel(&mut self, id: OrderId) -> Result<(), BookError> {
+        if !self.order_ids.contains(&id) {
+            return Err(BookError::OrderNotFound);
+        }
+
+        let mut index: usize = 0;
+
+        for (curr_price, curr_queue) in self.bids.iter_mut() {
+            for curr_order in curr_queue.iter() {
+                if curr_order.id() == id {
+                    break;
+                }
+
+                index += 1;
+            }
+
+            curr_queue.remove(index);
+            return Ok(());
+        }
+        
         Ok(())
     } 
 }
