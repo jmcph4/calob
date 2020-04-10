@@ -226,7 +226,28 @@ impl<'a> Book<'a> {
         
         Ok(())
     } 
+   
+    pub fn top(&self) -> Option<(OrderPrice, OrderPrice)> {
+        let mut best_bid: OrderPrice = 0;        
+        let mut best_ask: OrderPrice = 0;        
+
+        for (price_level, level_orders) in self.bids.iter() {
+            best_bid = *price_level;
+            break;
+        }
+
+        for (price_level, level_orders) in self.bids.iter().rev() {
+            best_ask = *price_level;
+            break;
+        }
     
+        if best_bid == 0 || best_ask == 0 {
+            return None;
+        }    
+
+        Some((best_bid, best_ask))
+    }
+ 
     fn payout_order(ticker: String, order: &'a mut Order,
         price: Option<OrderPrice>, quantity: Option<OrderQuantity>) ->
         Result <(), BookError> {
