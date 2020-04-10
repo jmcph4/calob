@@ -82,16 +82,16 @@ impl<'a> Book<'a> {
                             if counter_quantity < order_quantity {
                                 Book::payout_order(self.ticker.clone(),
                                     counter_order, Some(curr_price), None)?;
-                                Book::payout_order(self.ticker.clone(), order, Some(curr_price),
-                                    Some(counter_quantity))?;
+                                Book::payout_order(self.ticker.clone(), order,
+                                    Some(curr_price), Some(counter_quantity))?;
 
                                 /* remove counter order as it is consumed */
                                 counter_order_done = true;
                             } else if counter_quantity == order_quantity {
-                                Book::payout_order(self.ticker.clone(), counter_order, Some(curr_price),
-                                    None)?;
-                                Book::payout_order(self.ticker.clone(), order, Some(curr_price),
-                                    Some(counter_quantity))?;
+                                Book::payout_order(self.ticker.clone(),
+                                    counter_order, Some(curr_price), None)?;
+                                Book::payout_order(self.ticker.clone(), order,
+                                    Some(curr_price), Some(counter_quantity))?;
 
                                 /* remove counter order as it is consumed */
                                 counter_order_done = true;
@@ -99,10 +99,10 @@ impl<'a> Book<'a> {
                                 matched = true;
                                 break;
                             } else {
-                                Book::payout_order(self.ticker.clone(), counter_order, Some(curr_price),
-                                    None)?;
-                                Book::payout_order(self.ticker.clone(), order, Some(curr_price),
-                                    Some(counter_quantity))?;
+                                Book::payout_order(self.ticker.clone(),
+                                    counter_order, Some(curr_price), None)?;
+                                Book::payout_order(self.ticker.clone(), order,
+                                    Some(curr_price), Some(counter_quantity))?;
                                 
                                 matched = true;
                                 break;
@@ -141,18 +141,18 @@ impl<'a> Book<'a> {
                                                     counter_order.quantity();
                             
                             if counter_quantity < order_quantity {
-                                Book::payout_order(self.ticker.clone(), counter_order, Some(curr_price),
-                                    None)?;
-                                Book::payout_order(self.ticker.clone(), order, Some(curr_price),
-                                    Some(counter_quantity))?;
+                                Book::payout_order(self.ticker.clone(),
+                                    counter_order, Some(curr_price), None)?;
+                                Book::payout_order(self.ticker.clone(), order,
+                                    Some(curr_price), Some(counter_quantity))?;
 
                                 /* remove counter order as it is consumed */
                                 counter_order_done = true;
                             } else if counter_quantity == order_quantity {
-                                Book::payout_order(self.ticker.clone(), counter_order, Some(curr_price),
-                                    None)?;
-                                Book::payout_order(self.ticker.clone(), order, Some(curr_price),
-                                    Some(counter_quantity))?;
+                                Book::payout_order(self.ticker.clone(),
+                                    counter_order, Some(curr_price), None)?;
+                                Book::payout_order(self.ticker.clone(), order,
+                                    Some(curr_price), Some(counter_quantity))?;
 
                                 /* remove counter order as it is consumed */
                                 counter_order_done = true;
@@ -160,10 +160,10 @@ impl<'a> Book<'a> {
                                 matched = true;
                                 break;
                             } else {
-                                Book::payout_order(self.ticker.clone(), counter_order, Some(curr_price),
-                                    None)?;
-                                Book::payout_order(self.ticker.clone(), order, Some(curr_price),
-                                    Some(counter_quantity))?;
+                                Book::payout_order(self.ticker.clone(),
+                                    counter_order, Some(curr_price), None)?;
+                                Book::payout_order(self.ticker.clone(), order,
+                                    Some(curr_price), Some(counter_quantity))?;
                                 
                                 matched = true;
                                 break;
@@ -189,6 +189,9 @@ impl<'a> Book<'a> {
                 }
             }
         };
+
+        Book::prune_side(&mut self.bids);
+        Book::prune_side(&mut self.asks);
 
         Ok(())
     }
@@ -243,6 +246,20 @@ impl<'a> Book<'a> {
         };
 
         Ok(())
+    }
+    
+    fn prune_side(side: &mut Side) {
+        let mut prices_to_prune: Vec<OrderPrice> = vec![];
+        
+        for (price_level, level_orders) in side.iter_mut() {
+            if level_orders.is_empty() {
+                prices_to_prune.push(*price_level);
+            }
+        }
+
+        for price in prices_to_prune.iter() {
+            side.remove(price);
+        }
     }
 
 }
