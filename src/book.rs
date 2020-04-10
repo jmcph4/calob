@@ -2,6 +2,7 @@ use std::collections::{BTreeMap, VecDeque};
 
 use crate::order::*;
 
+#[derive(Debug)]
 pub enum BookError {
     OrderNotFound
 }
@@ -256,5 +257,55 @@ impl<'a> Book<'a> {
         
         Ok(())
     } 
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashMap;
+    use crate::account::{Account, AccountHolding};
+
+    #[test]
+    fn test_submit_equal_orders() -> Result<(), BookError> {
+        let mut holdings: HashMap<String, AccountHolding> = HashMap::new();
+        holdings.insert("MSFT".to_string(), 20);
+        
+        let mut actual_account1: Account =
+                Account::new(1, "John Doe".to_string(), 2500, HashMap::new());
+        let mut actual_account2: Account =
+                Account::new(2, "Jane Doe".to_string(), 0, holdings);
+        let mut actual_order1: Order = 
+                Order::new(1000, &mut actual_account1, OrderType::Bid, 125, 20);
+        let mut actual_order2: Order =
+                Order::new(1001, &mut actual_account2, OrderType::Ask, 125, 20);
+        
+        let mut actual_book: Book = Book::new(1,
+            "Vereenigde Oostindische Compagnie".to_string(), "VOC".to_string());
+        
+        actual_book.submit(&mut actual_order1)?;
+        actual_book.submit(&mut actual_order2)?;
+        
+        /*let mut expected_book: Book = Book::new(1,
+            "Vereenigde Oostindische Compagnie".to_string(), "VOC".to_string());*/
+        
+        let expected_book: Book = Book {
+            id: 1,
+            name: "Vereenigde Oostindische Compagnie".to_string(),
+            ticker: "VOC".to_string(),
+            bids: Side::new(),
+            asks: Side::new(),
+            ltp: 125,
+            has_traded: true,
+            order_ids: vec![]
+        };
+
+        assert_eq!(actual_book, expected_book);
+        assert_eq!(actual_account1.balance(), 0);
+        assert_eq!(actual_account1.holding("MSFT".to_string()).unwrap(), 20);
+        assert_eq!(actual_account2.balance(), 2500);
+        assert_eq!(actual_account2.holding("MSFT".to_string()).unwrap(), 0);
+        
+        Ok(())
+    }
 }
 
