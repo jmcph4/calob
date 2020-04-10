@@ -263,6 +263,7 @@ impl<'a> Book<'a> {
 mod tests {
     use super::*;
     use std::collections::HashMap;
+    use std::iter::FromIterator;
     use crate::account::{Account, AccountHolding};
 
     #[test]
@@ -285,9 +286,6 @@ mod tests {
         actual_book.submit(&mut actual_order1)?;
         actual_book.submit(&mut actual_order2)?;
         
-        /*let mut expected_book: Book = Book::new(1,
-            "Vereenigde Oostindische Compagnie".to_string(), "VOC".to_string());*/
-        
         let expected_book: Book = Book {
             id: 1,
             name: "Vereenigde Oostindische Compagnie".to_string(),
@@ -304,6 +302,63 @@ mod tests {
         assert_eq!(actual_account1.holding("MSFT".to_string()).unwrap(), 20);
         assert_eq!(actual_account2.balance(), 2500);
         assert_eq!(actual_account2.holding("MSFT".to_string()).unwrap(), 0);
+        
+        Ok(())
+    }
+
+    #[test]
+    fn test_submit_price_mismatch_nocross() -> Result<(), BookError> {
+        let mut holdings: HashMap<String, AccountHolding> = HashMap::new();
+        holdings.insert("MSFT".to_string(), 20);
+        
+        let mut actual_account1: Account =
+                Account::new(1, "John Doe".to_string(), 2500, HashMap::new());
+        let mut actual_account2: Account =
+                Account::new(2, "Jane Doe".to_string(), 0, holdings.clone());
+        let mut actual_order1: Order = 
+                Order::new(1000, &mut actual_account1, OrderType::Bid, 125, 20);
+        let mut actual_order2: Order =
+                Order::new(1001, &mut actual_account2, OrderType::Ask, 130, 20);
+        
+        let mut actual_book: Book = Book::new(1,
+            "Vereenigde Oostindische Compagnie".to_string(), "VOC".to_string());
+        
+        actual_book.submit(&mut actual_order1)?;
+        actual_book.submit(&mut actual_order2)?;
+        
+        let mut expected_account1: Account =
+                Account::new(1, "John Doe".to_string(), 2500, HashMap::new());
+        let mut expected_account2: Account =
+                Account::new(2, "Jane Doe".to_string(), 0, holdings.clone());
+        let mut expected_order1: Order = 
+                Order::new(1000, &mut expected_account1, OrderType::Bid, 125,
+                    20);
+        let mut expected_order2: Order =
+                Order::new(1001, &mut expected_account2, OrderType::Ask, 130,
+                    20);
+        
+        let mut expected_bids: Side = Side::new();
+        expected_bids.insert(125, VecDeque::from_iter(
+                                    vec![&mut expected_order1]));
+        
+        let mut expected_asks: Side = Side::new();
+        expected_asks.insert(130, VecDeque::from_iter(
+                                    vec![&mut expected_order2]));
+        
+        let expected_book: Book = Book {
+            id: 1,
+            name: "Vereenigde Oostindische Compagnie".to_string(),
+            ticker: "VOC".to_string(),
+            bids: expected_bids,
+            asks: expected_asks,
+            ltp: 0,
+            has_traded: false,
+            order_ids: vec![1001, 1002]
+        };
+        
+        assert_eq!(actual_book, expected_book);
+        assert_eq!(actual_account1, expected_account1);
+        assert_eq!(actual_account2, expected_account2);
         
         Ok(())
     }
