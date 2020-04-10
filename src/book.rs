@@ -87,6 +87,8 @@ impl<'a> Book<'a> {
 
                                 /* remove counter order as it is consumed */
                                 counter_order_done = true;
+                                Book::remove_id(&mut self.order_ids,
+                                    counter_order.id());
                             } else if counter_quantity == order_quantity {
                                 Book::payout_order(self.ticker.clone(),
                                     counter_order, Some(curr_price), None)?;
@@ -95,6 +97,8 @@ impl<'a> Book<'a> {
 
                                 /* remove counter order as it is consumed */
                                 counter_order_done = true;
+                                Book::remove_id(&mut self.order_ids,
+                                    counter_order.id());
                                 
                                 matched = true;
                                 break;
@@ -148,6 +152,8 @@ impl<'a> Book<'a> {
 
                                 /* remove counter order as it is consumed */
                                 counter_order_done = true;
+                                Book::remove_id(&mut self.order_ids,
+                                    counter_order.id());
                             } else if counter_quantity == order_quantity {
                                 Book::payout_order(self.ticker.clone(),
                                     counter_order, Some(curr_price), None)?;
@@ -156,6 +162,8 @@ impl<'a> Book<'a> {
 
                                 /* remove counter order as it is consumed */
                                 counter_order_done = true;
+                                Book::remove_id(&mut self.order_ids,
+                                    counter_order.id());
                                 
                                 matched = true;
                                 break;
@@ -262,6 +270,18 @@ impl<'a> Book<'a> {
         }
     }
 
+    fn remove_id(order_ids: &mut Vec<OrderId>, id: OrderId) {
+        let mut pos: usize = 0;
+
+        for i in 0..order_ids.len() {
+            if order_ids[i] == id {
+                pos = i;
+                break;
+            }
+        }
+
+        order_ids.remove(pos);
+    }
 }
 
 #[cfg(test)]
@@ -274,12 +294,12 @@ mod tests {
     #[test]
     fn test_submit_equal_orders() -> Result<(), BookError> {
         let mut holdings: HashMap<String, AccountHolding> = HashMap::new();
-        holdings.insert("MSFT".to_string(), 20);
+        holdings.insert("VOC".to_string(), 20);
         
         let mut actual_account1: Account =
                 Account::new(1, "John Doe".to_string(), 2500, HashMap::new());
         let mut actual_account2: Account =
-                Account::new(2, "Jane Doe".to_string(), 0, holdings);
+                Account::new(2, "Jane Doe".to_string(), 0, holdings.clone());
         let mut actual_order1: Order = 
                 Order::new(1000, &mut actual_account1, OrderType::Bid, 125, 20);
         let mut actual_order2: Order =
@@ -302,11 +322,24 @@ mod tests {
             order_ids: vec![]
         };
 
+        let mut expected_holdings2: HashMap<String, AccountHolding> =
+            HashMap::new();
+        expected_holdings2.insert("VOC".to_string(), 0);
+        let mut expected_account1: Account =
+                Account::new(1, "John Doe".to_string(), 0, holdings);
+        let mut expected_account2: Account =
+                Account::new(2, "Jane Doe".to_string(), 2500,
+                expected_holdings2);
+        let mut expected_order1: Order = 
+                Order::new(1000, &mut expected_account1, OrderType::Bid, 125,
+                20);
+        let mut expected_order2: Order =
+                Order::new(1001, &mut expected_account2, OrderType::Ask, 125,
+                20);
+        
         assert_eq!(actual_book, expected_book);
-        assert_eq!(actual_account1.balance(), 0);
-        assert_eq!(actual_account1.holding("MSFT".to_string()).unwrap(), 20);
-        assert_eq!(actual_account2.balance(), 2500);
-        assert_eq!(actual_account2.holding("MSFT".to_string()).unwrap(), 0);
+        assert_eq!(actual_account1, expected_account1);
+        assert_eq!(actual_account2, expected_account2);
         
         Ok(())
     }
