@@ -1,3 +1,4 @@
+#![allow(unused_assignments)]
 use std::collections::{BTreeMap, VecDeque};
 
 use crate::order::*;
@@ -74,7 +75,7 @@ impl<'a> Book<'a> {
                     for curr_queue in self.asks.values_mut() {
                         for _i in 0..curr_queue.len() {
                             let counter_order = curr_queue.pop_front().unwrap();
-                            let mut counter_order_done: bool = false;
+                            let counter_order_done: bool;
                             let curr_price: OrderPrice = counter_order.price();
                     
                             if curr_price <= price_key {
@@ -144,7 +145,7 @@ impl<'a> Book<'a> {
                     for curr_queue in self.bids.values_mut() {
                         for _i in 0..curr_queue.len() {
                             let counter_order = curr_queue.pop_front().unwrap();
-                            let mut counter_order_done: bool = false;
+                            let counter_order_done: bool;
                             let curr_price: OrderPrice = counter_order.price();
                             
                             if curr_price <= price_key {
@@ -222,7 +223,7 @@ impl<'a> Book<'a> {
 
         let mut index: usize = 0;
 
-        for (curr_price, curr_queue) in self.bids.iter_mut() {
+        for (_curr_price, curr_queue) in self.bids.iter_mut() {
             for curr_order in curr_queue.iter() {
                 if curr_order.id() == id {
                     break;
@@ -242,12 +243,12 @@ impl<'a> Book<'a> {
         let mut best_bid: OrderPrice = 0;        
         let mut best_ask: OrderPrice = 0;        
 
-        for (price_level, level_orders) in self.bids.iter() {
+        for (price_level, _level_orders) in self.bids.iter() {
             best_bid = *price_level;
             break;
         }
 
-        for (price_level, level_orders) in self.bids.iter().rev() {
+        for (price_level, _level_orders) in self.bids.iter().rev() {
             best_ask = *price_level;
             break;
         }
