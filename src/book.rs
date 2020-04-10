@@ -277,12 +277,14 @@ impl<'a> Book<'a> {
 
         match order.r#type() {
             OrderType::Bid => {
-                order.owner().take_balance(amount);
-                order.owner().add_holding(ticker.clone(), actual_quantity);
+                order.owner().take_balance(amount).unwrap();
+                order.owner().add_holding(ticker.clone(), actual_quantity).
+                    unwrap();
             },
             OrderType::Ask => {
-                order.owner().add_balance(amount);
-                order.owner().take_holding(ticker.clone(), actual_quantity);
+                order.owner().add_balance(amount).unwrap();
+                order.owner().take_holding(ticker.clone(), actual_quantity).
+                    unwrap();
             }
         };
 
@@ -363,10 +365,10 @@ mod tests {
         let mut expected_account2: Account =
                 Account::new(2, "Jane Doe".to_string(), 2500,
                 expected_holdings2);
-        let mut expected_order1: Order = 
+        let _expected_order1: Order = 
                 Order::new(1000, &mut expected_account1, OrderType::Bid, 125,
                 20);
-        let mut expected_order2: Order =
+        let _expected_order2: Order =
                 Order::new(1001, &mut expected_account2, OrderType::Ask, 125,
                 20);
         
