@@ -69,59 +69,64 @@ impl<'a> Book<'a> {
             OrderType::Bid => {
                 let mut matched: bool = false;
                 
-                for curr_queue in self.asks.values_mut() {
-                    for _i in 0..curr_queue.len() {
-                        let counter_order = curr_queue.pop_front().unwrap();
-                        let mut counter_order_done: bool = false;
-                        let curr_price: OrderPrice = counter_order.price();
-                        
-                        if curr_price <= price_key {
-                            let counter_quantity: OrderPrice =
+                if !self.order_ids.is_empty() &&
+                    price_key >= self.top().unwrap().1 {
+                    for curr_queue in self.asks.values_mut() {
+                        for _i in 0..curr_queue.len() {
+                            let counter_order = curr_queue.pop_front().unwrap();
+                            let mut counter_order_done: bool = false;
+                            let curr_price: OrderPrice = counter_order.price();
+                    
+                            if curr_price <= price_key {
+                                let counter_quantity: OrderPrice =
                                                     counter_order.quantity();
-                            
-                            if counter_quantity < order_quantity {
-                                Book::payout_order(self.ticker.clone(),
-                                    counter_order, Some(curr_price), None)?;
-                                Book::payout_order(self.ticker.clone(), order,
-                                    Some(curr_price), Some(counter_quantity))?;
-
-                                /* remove counter order as it is consumed */
-                                counter_order_done = true;
-                                Book::remove_id(&mut self.order_ids,
-                                    counter_order.id());
-                            } else if counter_quantity == order_quantity {
-                                Book::payout_order(self.ticker.clone(),
-                                    counter_order, Some(curr_price), None)?;
-                                Book::payout_order(self.ticker.clone(), order,
-                                    Some(curr_price), Some(counter_quantity))?;
-
-                                /* remove counter order as it is consumed */
-                                counter_order_done = true;
-                                Book::remove_id(&mut self.order_ids,
-                                    counter_order.id());
+                                if counter_quantity < order_quantity {
+                                    Book::payout_order(self.ticker.clone(),
+                                        counter_order, Some(curr_price), None)?;
+                                    Book::payout_order(self.ticker.clone(),
+                                        order, Some(curr_price),
+                                        Some(counter_quantity))?;
+                                    
+                                    /* remove counter order as it is consumed */
+                                    counter_order_done = true;
+                                    Book::remove_id(&mut self.order_ids,
+                                        counter_order.id());
+                                } else if counter_quantity == order_quantity {
+                                    Book::payout_order(self.ticker.clone(),
+                                        counter_order, Some(curr_price), None)?;
+                                    Book::payout_order(self.ticker.clone(),
+                                        order, Some(curr_price),
+                                        Some(counter_quantity))?;
+                                    
+                                    /* remove counter order as it is consumed */
+                                    counter_order_done = true;
+                                    Book::remove_id(&mut self.order_ids,
+                                        counter_order.id());
+                                    
+                                    matched = true;
+                                    break;
+                                } else {
+                                    Book::payout_order(self.ticker.clone(),
+                                        counter_order, Some(curr_price), None)?;
+                                    Book::payout_order(self.ticker.clone(),
+                                    order, Some(curr_price),
+                                    Some(counter_quantity))?;
+                                    
+                                    matched = true;
+                                    break;
+                                }
                                 
-                                matched = true;
-                                break;
+                                /* restore counter order if not consumed */
+                                if !counter_order_done {     
+                                    curr_queue.push_back(counter_order);
+                                }
                             } else {
-                                Book::payout_order(self.ticker.clone(),
-                                    counter_order, Some(curr_price), None)?;
-                                Book::payout_order(self.ticker.clone(), order,
-                                    Some(curr_price), Some(counter_quantity))?;
-                                
-                                matched = true;
-                                break;
-                            }
-                       
-                            /* restore counter order if not consumed */
-                            if !counter_order_done {     
                                 curr_queue.push_back(counter_order);
                             }
-                        } else {
-                            curr_queue.push_back(counter_order);
                         }
                     }
                 }
-
+                
                 if !matched {
                     self.bids.insert(price_key, VecDeque::new());
                     self.bids.get_mut(&price_key).unwrap().push_back(order);
@@ -134,59 +139,65 @@ impl<'a> Book<'a> {
             OrderType::Ask => {
                 let mut matched: bool = false;
                 
-                for curr_queue in self.bids.values_mut() {
-                    for _i in 0..curr_queue.len() {
-                        let counter_order = curr_queue.pop_front().unwrap();
-                        let mut counter_order_done: bool = false;
-                        let curr_price: OrderPrice = counter_order.price();
-                        
-                        if curr_price <= price_key {
-                            let counter_quantity: OrderPrice =
+                if !self.order_ids.is_empty() &&
+                    price_key <= self.top().unwrap().0 {
+                    for curr_queue in self.bids.values_mut() {
+                        for _i in 0..curr_queue.len() {
+                            let counter_order = curr_queue.pop_front().unwrap();
+                            let mut counter_order_done: bool = false;
+                            let curr_price: OrderPrice = counter_order.price();
+                            
+                            if curr_price <= price_key {
+                                let counter_quantity: OrderPrice =
                                                     counter_order.quantity();
                             
-                            if counter_quantity < order_quantity {
-                                Book::payout_order(self.ticker.clone(),
-                                    counter_order, Some(curr_price), None)?;
-                                Book::payout_order(self.ticker.clone(), order,
-                                    Some(curr_price), Some(counter_quantity))?;
-
-                                /* remove counter order as it is consumed */
-                                counter_order_done = true;
-                                Book::remove_id(&mut self.order_ids,
-                                    counter_order.id());
-                            } else if counter_quantity == order_quantity {
-                                Book::payout_order(self.ticker.clone(),
-                                    counter_order, Some(curr_price), None)?;
-                                Book::payout_order(self.ticker.clone(), order,
-                                    Some(curr_price), Some(counter_quantity))?;
-
-                                /* remove counter order as it is consumed */
-                                counter_order_done = true;
-                                Book::remove_id(&mut self.order_ids,
-                                    counter_order.id());
+                                if counter_quantity < order_quantity {
+                                    Book::payout_order(self.ticker.clone(),
+                                        counter_order, Some(curr_price), None)?;
+                                    Book::payout_order(self.ticker.clone(),
+                                        order, Some(curr_price),
+                                        Some(counter_quantity))?;
+                                    
+                                    /* remove counter order as it is consumed */
+                                    counter_order_done = true;
+                                    Book::remove_id(&mut self.order_ids,
+                                        counter_order.id());
+                                } else if counter_quantity == order_quantity {
+                                    Book::payout_order(self.ticker.clone(),
+                                        counter_order, Some(curr_price), None)?;
+                                    Book::payout_order(self.ticker.clone(),
+                                        order, Some(curr_price),
+                                        Some(counter_quantity))?;
+                                    
+                                    /* remove counter order as it is consumed */
+                                    counter_order_done = true;
+                                    Book::remove_id(&mut self.order_ids,
+                                        counter_order.id());
+                                    
+                                    matched = true;
+                                    break;
+                                } else {
+                                    Book::payout_order(self.ticker.clone(),
+                                        counter_order, Some(curr_price), None)?;
+                                    Book::payout_order(self.ticker.clone(),
+                                        order, Some(curr_price),
+                                        Some(counter_quantity))?;
+                                    
+                                    matched = true;
+                                    break;
+                                }
                                 
-                                matched = true;
-                                break;
+                                /* restore counter order if not consumed */
+                                if !counter_order_done {     
+                                    curr_queue.push_back(counter_order);
+                                }
                             } else {
-                                Book::payout_order(self.ticker.clone(),
-                                    counter_order, Some(curr_price), None)?;
-                                Book::payout_order(self.ticker.clone(), order,
-                                    Some(curr_price), Some(counter_quantity))?;
-                                
-                                matched = true;
-                                break;
-                            }
-                       
-                            /* restore counter order if not consumed */
-                            if !counter_order_done {     
                                 curr_queue.push_back(counter_order);
                             }
-                        } else {
-                            curr_queue.push_back(counter_order);
                         }
                     }
                 }
-
+                
                 if !matched {
                     self.asks.insert(price_key, VecDeque::new());
                     self.asks.get_mut(&price_key).unwrap().push_back(order);
@@ -412,7 +423,7 @@ mod tests {
             asks: expected_asks,
             ltp: 0,
             has_traded: false,
-            order_ids: vec![1001, 1002]
+            order_ids: vec![1000, 1001]
         };
         
         assert_eq!(actual_book, expected_book);
