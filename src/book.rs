@@ -70,9 +70,6 @@ impl<'a> Book<'a> {
                 let mut matched: bool = false;
                 
                 for curr_queue in self.asks.values_mut() {
-                    /*let mut curr_queue: &mut VecDeque<&'a mut Order> =
-                        self.asks.get_mut(curr_price).unwrap();*/
-                    
                     for _i in 0..curr_queue.len() {
                         let counter_order = curr_queue.pop_front().unwrap();
                         let mut counter_order_done: bool = false;
@@ -83,47 +80,29 @@ impl<'a> Book<'a> {
                                                     counter_order.quantity();
                             
                             if counter_quantity < order_quantity {
-                                counter_order.owner().add_balance(curr_price *
-                                                            counter_quantity);
-                                counter_order.owner().take_holding(
-                                                            self.ticker.clone(),
-                                                            counter_quantity);
-
-                                order.owner().take_balance(curr_price *
-                                                            counter_quantity);
-                                order.owner().add_holding(self.ticker.clone(),
-                                                            counter_quantity);
+                                Book::payout_order(self.ticker.clone(),
+                                    counter_order, Some(curr_price), None)?;
+                                Book::payout_order(self.ticker.clone(), order, Some(curr_price),
+                                    Some(counter_quantity))?;
 
                                 /* remove counter order as it is consumed */
                                 counter_order_done = true;
                             } else if counter_quantity == order_quantity {
-                                counter_order.owner().add_balance(curr_price *
-                                                            counter_quantity);
-                                counter_order.owner().take_holding(
-                                                            self.ticker.clone(),
-                                                            counter_quantity);
+                                Book::payout_order(self.ticker.clone(), counter_order, Some(curr_price),
+                                    None)?;
+                                Book::payout_order(self.ticker.clone(), order, Some(curr_price),
+                                    Some(counter_quantity))?;
 
-                                order.owner().take_balance(curr_price *
-                                                            counter_quantity);
-                                order.owner().add_holding(self.ticker.clone(),
-                                                            counter_quantity);
-                                
                                 /* remove counter order as it is consumed */
                                 counter_order_done = true;
- 
+                                
                                 matched = true;
                                 break;
                             } else {
-                                counter_order.owner().take_balance(curr_price *
-                                                            order_quantity);
-                                counter_order.owner().add_holding(
-                                                            self.ticker.clone(),
-                                                            order_quantity);
-
-                                order.owner().add_balance(curr_price *
-                                                            order_quantity);
-                                order.owner().take_holding(self.ticker.clone(),
-                                                            order_quantity);
+                                Book::payout_order(self.ticker.clone(), counter_order, Some(curr_price),
+                                    None)?;
+                                Book::payout_order(self.ticker.clone(), order, Some(curr_price),
+                                    Some(counter_quantity))?;
                                 
                                 matched = true;
                                 break;
@@ -152,9 +131,6 @@ impl<'a> Book<'a> {
                 let mut matched: bool = false;
                 
                 for curr_queue in self.bids.values_mut() {
-                    /*let mut curr_queue: &mut VecDeque<&'a mut Order> =
-                        self.asks.get_mut(curr_price).unwrap();*/
-                    
                     for _i in 0..curr_queue.len() {
                         let counter_order = curr_queue.pop_front().unwrap();
                         let mut counter_order_done: bool = false;
@@ -165,47 +141,29 @@ impl<'a> Book<'a> {
                                                     counter_order.quantity();
                             
                             if counter_quantity < order_quantity {
-                                counter_order.owner().take_balance(curr_price *
-                                                            counter_quantity);
-                                counter_order.owner().add_holding(
-                                                            self.ticker.clone(),
-                                                            counter_quantity);
-
-                                order.owner().add_balance(curr_price *
-                                                            counter_quantity);
-                                order.owner().take_holding(self.ticker.clone(),
-                                                            counter_quantity);
+                                Book::payout_order(self.ticker.clone(), counter_order, Some(curr_price),
+                                    None)?;
+                                Book::payout_order(self.ticker.clone(), order, Some(curr_price),
+                                    Some(counter_quantity))?;
 
                                 /* remove counter order as it is consumed */
                                 counter_order_done = true;
                             } else if counter_quantity == order_quantity {
-                                counter_order.owner().take_balance(curr_price *
-                                                            counter_quantity);
-                                counter_order.owner().add_holding(
-                                                            self.ticker.clone(),
-                                                            counter_quantity);
+                                Book::payout_order(self.ticker.clone(), counter_order, Some(curr_price),
+                                    None)?;
+                                Book::payout_order(self.ticker.clone(), order, Some(curr_price),
+                                    Some(counter_quantity))?;
 
-                                order.owner().add_balance(curr_price *
-                                                            counter_quantity);
-                                order.owner().take_holding(self.ticker.clone(),
-                                                            counter_quantity);
-                                
                                 /* remove counter order as it is consumed */
                                 counter_order_done = true;
- 
+                                
                                 matched = true;
                                 break;
                             } else {
-                                counter_order.owner().add_balance(curr_price *
-                                                            order_quantity);
-                                counter_order.owner().take_holding(
-                                                            self.ticker.clone(),
-                                                            order_quantity);
-
-                                order.owner().take_balance(curr_price *
-                                                            order_quantity);
-                                order.owner().add_holding(self.ticker.clone(),
-                                                            order_quantity);
+                                Book::payout_order(self.ticker.clone(), counter_order, Some(curr_price),
+                                    None)?;
+                                Book::payout_order(self.ticker.clone(), order, Some(curr_price),
+                                    Some(counter_quantity))?;
                                 
                                 matched = true;
                                 break;
@@ -257,6 +215,36 @@ impl<'a> Book<'a> {
         
         Ok(())
     } 
+    
+    fn payout_order(ticker: String, order: &'a mut Order,
+        price: Option<OrderPrice>, quantity: Option<OrderQuantity>) ->
+        Result <(), BookError> {
+        let actual_price: OrderPrice = match price {
+            Some(p) => p,
+            None => order.price()
+        };
+
+        let actual_quantity: OrderQuantity = match quantity {
+            Some(q) => q,
+            None => order.quantity()
+        };
+
+        let amount: OrderQuantity = actual_price * actual_quantity;
+
+        match order.r#type() {
+            OrderType::Bid => {
+                order.owner().take_balance(amount);
+                order.owner().add_holding(ticker.clone(), actual_quantity);
+            },
+            OrderType::Ask => {
+                order.owner().add_balance(amount);
+                order.owner().take_holding(ticker.clone(), actual_quantity);
+            }
+        };
+
+        Ok(())
+    }
+
 }
 
 #[cfg(test)]
