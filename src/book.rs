@@ -220,19 +220,23 @@ impl<'a> Book<'a> {
             return Err(BookError::OrderNotFound);
         }
 
-        let mut index: usize = 0;
-
         for (_curr_price, curr_queue) in self.bids.iter_mut() {
+            let mut index: usize = 0;
+            let mut found: bool = false;            
+
             for curr_order in curr_queue.iter() {
                 if curr_order.id() == id {
+                    found = true;
                     break;
                 }
 
                 index += 1;
             }
 
-            curr_queue.remove(index);
-            return Ok(());
+            if found {
+                curr_queue.remove(index);
+                return Ok(());
+            }
         }
         
         Ok(())
