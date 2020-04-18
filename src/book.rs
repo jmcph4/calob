@@ -246,14 +246,12 @@ impl<'a> Book<'a> {
         let mut best_bid: OrderPrice = 0;        
         let mut best_ask: OrderPrice = 0;        
 
-        for (price_level, _level_orders) in self.bids.iter() {
-            best_bid = *price_level;
-            break;
+        if self.bids.iter().next().is_some() {
+            best_bid = *self.bids.iter().next().unwrap().0;
         }
-
-        for (price_level, _level_orders) in self.asks.iter().rev() {
-            best_ask = *price_level;
-            break;
+        
+        if self.asks.iter().next().is_some() {
+            best_ask = *self.asks.iter().rev().next().unwrap().0;
         }
         
         let mut bid_top: Option<OrderPrice> = None;
