@@ -76,11 +76,7 @@ impl Account {
     }
 
     pub fn set_holding(&mut self, ticker: String, quantity: AccountHolding) {
-        if !self.holdings.contains_key(&ticker) {
-            self.holdings.insert(ticker, quantity);
-        } else {
-            *self.holdings.get_mut(&ticker).unwrap() = quantity;
-        }
+        self.holdings.entry(ticker).or_insert(quantity);
     }
 
     pub fn add_balance(&mut self, amount: AccountBalance) ->
@@ -105,6 +101,7 @@ impl Account {
         Ok(())
     }
 
+    #[allow(clippy::map_entry)]
     pub fn add_holding(&mut self, ticker: String, amount: AccountHolding) ->
         Result<(), AccountError> {
         if !self.holdings.contains_key(&ticker) {
