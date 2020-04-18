@@ -46,7 +46,7 @@ impl<'a> Order<'a> {
         self.id
     }
 
-    pub fn owner<'b>(&'b mut self) -> &'b mut Account {
+    pub fn owner(&mut self) -> &mut Account {
         self.owner
     }
 
