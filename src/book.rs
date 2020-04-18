@@ -453,6 +453,7 @@ mod tests {
         Ok(())
     }
 
+    #[allow(unused_variables)]
     #[test]
     fn test_submit_price_mismatch_cross() -> Result<(), BookError> {
         let mut holdings: HashMap<String, AccountHolding> = HashMap::new();
@@ -482,15 +483,15 @@ mod tests {
         let mut expected_account2: Account =
                 Account::new(2, "Jane Doe".to_string(), 2800,
                 expected_holdings2);
-        let mut expected_order1: Order = 
+        let expected_order1: Order = 
                 Order::new(1000, &mut expected_account1, OrderType::Bid, 200,
                     20);
-        let mut expected_order2: Order =
+        let expected_order2: Order =
                 Order::new(1001, &mut expected_account2, OrderType::Ask, 140,
                     20);
         
-        let mut expected_bids: Side = Side::new();
-        let mut expected_asks: Side = Side::new();
+        let expected_bids: Side = Side::new();
+        let expected_asks: Side = Side::new();
         
         let expected_book: Book = Book {
             id: 1,
