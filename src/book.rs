@@ -1,5 +1,6 @@
 #![allow(unused_assignments)]
 use std::collections::{BTreeMap, VecDeque};
+use std::cmp::Ordering;
 
 use crate::order::*;
 
@@ -70,7 +71,7 @@ impl<'a> Book<'a> {
             OrderType::Bid => {
                 let mut matched: bool = false;
                 
-                if !self.top().1.is_none() &&
+                if self.top().1.is_some() &&
                     price_key >= self.top().1.unwrap() {
                     for curr_queue in self.asks.values_mut() {
                         for _i in 0..curr_queue.len() {
@@ -81,44 +82,48 @@ impl<'a> Book<'a> {
                             if curr_price <= price_key {
                                 let counter_quantity: OrderPrice =
                                                     counter_order.quantity();
-                                if counter_quantity < order_quantity {
-                                    Book::payout_order(self.ticker.clone(),
-                                        counter_order, None, None)?;
-                                    Book::payout_order(self.ticker.clone(),
+                                match counter_quantity.cmp(&order_quantity) {
+                                    Ordering::Less => {
+                                        Book::payout_order(self.ticker.clone(),
+                                            counter_order, None, None)?;
+                                        Book::payout_order(self.ticker.clone(),
+                                            order, Some(curr_price),
+                                            Some(counter_quantity))?;
+                                    
+                                        /* remove counter order as it is consumed */
+                                        counter_order_done = true;
+                                        Book::remove_id(&mut self.order_ids,
+                                            counter_order.id());
+                                    },
+                                    Ordering::Equal => {
+                                        Book::payout_order(self.ticker.clone(),
+                                            counter_order, None, None)?;
+                                        Book::payout_order(self.ticker.clone(),
+                                            order, Some(curr_price),
+                                            Some(counter_quantity))?;
+                                        
+                                        /* remove counter order as it is consumed */
+                                        counter_order_done = true;
+                                        Book::remove_id(&mut self.order_ids,
+                                            counter_order.id());
+                                        
+                                        self.has_traded = true;
+                                        self.ltp = price_key;
+                                        matched = true;
+                                        break;
+                                    },
+                                    Ordering::Greater => {
+                                        Book::payout_order(self.ticker.clone(),
+                                            counter_order, None, None)?;
+                                        Book::payout_order(self.ticker.clone(),
                                         order, Some(curr_price),
                                         Some(counter_quantity))?;
-                                    
-                                    /* remove counter order as it is consumed */
-                                    counter_order_done = true;
-                                    Book::remove_id(&mut self.order_ids,
-                                        counter_order.id());
-                                } else if counter_quantity == order_quantity {
-                                    Book::payout_order(self.ticker.clone(),
-                                        counter_order, None, None)?;
-                                    Book::payout_order(self.ticker.clone(),
-                                        order, Some(curr_price),
-                                        Some(counter_quantity))?;
-                                    
-                                    /* remove counter order as it is consumed */
-                                    counter_order_done = true;
-                                    Book::remove_id(&mut self.order_ids,
-                                        counter_order.id());
-                                    
-                                    self.has_traded = true;
-                                    self.ltp = price_key;
-                                    matched = true;
-                                    break;
-                                } else {
-                                    Book::payout_order(self.ticker.clone(),
-                                        counter_order, None, None)?;
-                                    Book::payout_order(self.ticker.clone(),
-                                    order, Some(curr_price),
-                                    Some(counter_quantity))?;
-                                    
-                                    self.has_traded = true;
-                                    self.ltp = price_key;
-                                    matched = true;
-                                    break;
+                                        
+                                        self.has_traded = true;
+                                        self.ltp = price_key;
+                                        matched = true;
+                                        break;
+                                    }
                                 }
                                 
                                 /* restore counter order if not consumed */
@@ -140,7 +145,7 @@ impl<'a> Book<'a> {
             },
             OrderType::Ask => {
                 let mut matched: bool = false;
-                if !self.top().0.is_none() &&
+                if self.top().0.is_some() &&
                     price_key <= self.top().0.unwrap() {
                     for curr_queue in self.bids.values_mut() {
                         for _i in 0..curr_queue.len() {
@@ -152,42 +157,44 @@ impl<'a> Book<'a> {
                                 let counter_quantity: OrderPrice =
                                                     counter_order.quantity();
                             
-                                if counter_quantity < order_quantity {
-                                    Book::payout_order(self.ticker.clone(),
-                                        counter_order, None, None)?;
-                                    Book::payout_order(self.ticker.clone(),
-                                        order, None, Some(counter_quantity))?;
-                                    
-                                    /* remove counter order as it is consumed */
-                                    counter_order_done = true;
-                                    Book::remove_id(&mut self.order_ids,
-                                        counter_order.id());
-                                } else if counter_quantity == order_quantity {
-                                    Book::payout_order(self.ticker.clone(),
-                                        counter_order, None, None)?;
-                                    Book::payout_order(self.ticker.clone(),
-                                        order, None, Some(counter_quantity))?;
-                                    
-                                    /* remove counter order as it is consumed */
-                                    counter_order_done = true;
-                                    Book::remove_id(&mut self.order_ids,
-                                        counter_order.id());
-                                    
-                                    self.has_traded = true;
-                                    self.ltp = price_key;
-                                    matched = true;
-                                    break;
-                                } else {
-                                    Book::payout_order(self.ticker.clone(),
-                                        counter_order, None, None)?;
-                                    Book::payout_order(self.ticker.clone(),
-                                        order, Some(curr_price),
-                                        Some(counter_quantity))?;
-                                    
-                                    self.has_traded = true;
-                                    self.ltp = price_key;
-                                    matched = true;
-                                    break;
+                                match counter_quantity.cmp(&order_quantity) {
+                                    Ordering::Less => {
+                                        Book::payout_order(self.ticker.clone(),
+                                            counter_order, None, None)?;
+                                        Book::payout_order(self.ticker.clone(),
+                                            order, None, Some(counter_quantity))?;
+                                        
+                                        /* remove counter order as it is consumed */
+                                        counter_order_done = true;
+                                        Book::remove_id(&mut self.order_ids,
+                                            counter_order.id());
+                                    }, Ordering::Equal => {
+                                        Book::payout_order(self.ticker.clone(),
+                                            counter_order, None, None)?;
+                                        Book::payout_order(self.ticker.clone(),
+                                            order, None, Some(counter_quantity))?;
+                                        
+                                        /* remove counter order as it is consumed */
+                                        counter_order_done = true;
+                                        Book::remove_id(&mut self.order_ids,
+                                            counter_order.id());
+                                        
+                                        self.has_traded = true;
+                                        self.ltp = price_key;
+                                        matched = true;
+                                        break;
+                                    }, Ordering::Greater => {
+                                        Book::payout_order(self.ticker.clone(),
+                                            counter_order, None, None)?;
+                                        Book::payout_order(self.ticker.clone(),
+                                            order, Some(curr_price),
+                                            Some(counter_quantity))?;
+                                        
+                                        self.has_traded = true;
+                                        self.ltp = price_key;
+                                        matched = true;
+                                        break;
+                                    }
                                 }
                                 
                                 /* restore counter order if not consumed */
@@ -220,19 +227,23 @@ impl<'a> Book<'a> {
             return Err(BookError::OrderNotFound);
         }
 
-        let mut index: usize = 0;
-
         for (_curr_price, curr_queue) in self.bids.iter_mut() {
+            let mut index: usize = 0;
+            let mut found: bool = false;            
+
             for curr_order in curr_queue.iter() {
                 if curr_order.id() == id {
+                    found = true;
                     break;
                 }
 
                 index += 1;
             }
 
-            curr_queue.remove(index);
-            return Ok(());
+            if found {
+                curr_queue.remove(index);
+                return Ok(());
+            }
         }
         
         Ok(())
@@ -242,14 +253,12 @@ impl<'a> Book<'a> {
         let mut best_bid: OrderPrice = 0;        
         let mut best_ask: OrderPrice = 0;        
 
-        for (price_level, _level_orders) in self.bids.iter() {
-            best_bid = *price_level;
-            break;
+        if self.bids.iter().next().is_some() {
+            best_bid = *self.bids.iter().next().unwrap().0;
         }
-
-        for (price_level, _level_orders) in self.asks.iter().rev() {
-            best_ask = *price_level;
-            break;
+        
+        if self.asks.iter().next().is_some() {
+            best_ask = *self.asks.iter().rev().next().unwrap().0;
         }
         
         let mut bid_top: Option<OrderPrice> = None;
@@ -288,13 +297,11 @@ impl<'a> Book<'a> {
         match order.r#type() {
             OrderType::Bid => {
                 order.owner().take_balance(amount).unwrap();
-                order.owner().add_holding(ticker.clone(), actual_quantity).
-                    unwrap();
+                order.owner().add_holding(ticker, actual_quantity).unwrap();
             },
             OrderType::Ask => {
                 order.owner().add_balance(amount).unwrap();
-                order.owner().take_holding(ticker.clone(), actual_quantity).
-                    unwrap();
+                order.owner().take_holding(ticker, actual_quantity).unwrap();
             }
         };
 
@@ -318,8 +325,8 @@ impl<'a> Book<'a> {
     fn remove_id(order_ids: &mut Vec<OrderId>, id: OrderId) {
         let mut pos: usize = 0;
 
-        for i in 0..order_ids.len() {
-            if order_ids[i] == id {
+        for (i, order_id) in order_ids.iter().enumerate() {
+            if *order_id == id {
                 pos = i;
                 break;
             }
@@ -446,6 +453,7 @@ mod tests {
         Ok(())
     }
 
+    #[allow(unused_variables)]
     #[test]
     fn test_submit_price_mismatch_cross() -> Result<(), BookError> {
         let mut holdings: HashMap<String, AccountHolding> = HashMap::new();
@@ -475,15 +483,15 @@ mod tests {
         let mut expected_account2: Account =
                 Account::new(2, "Jane Doe".to_string(), 2800,
                 expected_holdings2);
-        let mut expected_order1: Order = 
+        let expected_order1: Order = 
                 Order::new(1000, &mut expected_account1, OrderType::Bid, 200,
                     20);
-        let mut expected_order2: Order =
+        let expected_order2: Order =
                 Order::new(1001, &mut expected_account2, OrderType::Ask, 140,
                     20);
         
-        let mut expected_bids: Side = Side::new();
-        let mut expected_asks: Side = Side::new();
+        let expected_bids: Side = Side::new();
+        let expected_asks: Side = Side::new();
         
         let expected_book: Book = Book {
             id: 1,
