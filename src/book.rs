@@ -455,7 +455,7 @@ mod tests {
 
     #[allow(unused_variables)]
     #[test]
-    fn test_submit_price_mismatch_cross() -> Result<(), BookError> {
+    fn test_submit_bid_greater_equal() -> Result<(), BookError> {
         let mut holdings: HashMap<String, AccountHolding> = HashMap::new();
         holdings.insert("VOC".to_string(), 20);
         
