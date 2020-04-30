@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fmt;
 
 use thiserror::Error;
+use serde::{Serialize, Deserialize};
 
 #[derive(Copy, Clone, Debug, Error)]
 pub enum AccountError {
@@ -32,7 +33,7 @@ pub type AccountId = u128;
 pub type AccountBalance = u128;
 pub type AccountHolding = u128;
 
-#[derive(Clone, Debug, PartialEq, Eq, Default)]
+#[derive(Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub struct Account {
     id: AccountId,
     name: String,
