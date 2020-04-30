@@ -344,7 +344,7 @@ mod tests {
     use crate::account::{Account, AccountHolding};
 
     #[test]
-    fn test_submit_equal_orders() -> Result<(), BookError> {
+    fn test_submit_bid_equal_equal() -> Result<(), BookError> {
         let mut holdings: HashMap<String, AccountHolding> = HashMap::new();
         holdings.insert("VOC".to_string(), 20);
         
