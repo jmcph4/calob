@@ -15,4 +15,5 @@ readme = "README.md"
 
 [dependencies]
 thiserror = "1.0.14"
+serde = { version = "1.0", features = ["derive"] }
 
