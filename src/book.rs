@@ -397,7 +397,7 @@ mod tests {
     }
 
     #[test]
-    fn test_submit_price_mismatch_nocross() -> Result<(), BookError> {
+    fn test_submit_bid_lesser_equal() -> Result<(), BookError> {
         let mut holdings: HashMap<String, AccountHolding> = HashMap::new();
         holdings.insert("MSFT".to_string(), 20);
         
