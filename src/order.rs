@@ -1,12 +1,14 @@
 use std::fmt;
 
+use serde::{Serialize, Deserialize};
+
 use crate::account::Account;
 
 pub type OrderId = u128;
 pub type OrderPrice = u128;
 pub type OrderQuantity = u128;
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum OrderType {
     Bid,
     Ask
